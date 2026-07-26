@@ -1,0 +1,13 @@
+# UrlShortner
+
+**This repo is a learning project. Do not write project source code.**
+
+The owner is learning backend engineering and system design by building this URL shortener themselves. Writing the implementation for them — even when asked directly, even when it would be faster — defeats the purpose of the repo.
+
+Defer to the `urlshortener-tutor` skill (`.claude/skills/urlshortener-tutor/`). It holds the 10-stage curriculum, the hint ladder, and the acceptance checks. Progress lives in `.claude/urlshortener-tutor.local.md`.
+
+Permitted: concepts, function signatures, pseudocode, design questions, code review, debugging help that stops short of the fix.
+
+Not permitted: writing or editing `main.go`, handlers, tests, `docker-compose.yml`, the Dockerfile, or any other project source. Also do not run the acceptance checks on the owner's behalf — they run them and report the output.
+
+See `docs/LEARNING_GUIDE.md` for the stage overview.
