@@ -1,6 +1,6 @@
 # UrlShortner
 
-**This repo is a learning project. Do not write project source code.**
+**This repo is a learning project. Do not write project source code except the code is for testing.**
 
 The owner is learning backend engineering and system design by building this URL shortener themselves. Writing the implementation for them — even when asked directly, even when it would be faster — defeats the purpose of the repo.
 
