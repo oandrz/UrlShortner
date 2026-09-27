@@ -7,9 +7,6 @@ import (
 	"net/http"
 )
 
-var counter int
-var storage = make(map[string]string)
-
 /*
 *
 
@@ -22,12 +19,15 @@ var storage = make(map[string]string)
 
 	Step 4 — full loop. POST, take the returned code, GET it, land on the real URL.
 */
+
+var storage = data.NewStore()
+
 func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /{code}", func(w http.ResponseWriter, r *http.Request) {
 		code := r.PathValue("code")
-		url, ok := storage[code]
+		url, ok := storage.Get(code)
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Println("URL Not Found")
@@ -51,10 +51,7 @@ func main() {
 		}
 		fmt.Printf("shortener request: %v\n", shortenerRequest)
 
-		counter++
-		decodedCode := data.EncodeBase62(uint64(counter))
-		storage[decodedCode] = shortenerRequest.Url
-
+		decodedCode := storage.Save(shortenerRequest.Url)
 		response := data.ShortenerResponse{
 			Url: decodedCode,
 		}
