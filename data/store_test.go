@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-// TestStoreConcurrentAccess hammers one Store from many goroutines at once:
+// TestStoreConcurrentAccess hammers one MemStore from many goroutines at once:
 // each iteration starts one writer (Save) and one reader (Get), so reads and
 // writes overlap. Run it with `go test -race ./...`.
 func TestStoreConcurrentAccess(t *testing.T) {
 	const n = 1000
 
-	store := NewStore()
+	store := NewMemStore()
 	codes := make([]string, n) // each goroutine writes only its own index, so the test itself is race-free
 
 	var wg sync.WaitGroup
@@ -40,9 +40,9 @@ func TestStoreConcurrentAccess(t *testing.T) {
 		seen[code] = i
 
 		want := fmt.Sprintf("https://example.com/%d", i)
-		got, ok := store.Get(code)
-		if !ok {
-			t.Errorf("Get(%q) not found, want %q", code, want)
+		got, err := store.Get(code)
+		if err != nil {
+			t.Errorf("Get(%q) error: %v, want %q", code, err, want)
 		} else if got != want {
 			t.Errorf("Get(%q) = %q, want %q (link overwritten)", code, got, want)
 		}

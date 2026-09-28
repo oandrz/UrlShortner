@@ -1,14 +1,16 @@
 package data
 
-import "sync"
+import (
+	"sync"
+)
 
-type Store struct {
+type MemStore struct {
 	mu      sync.RWMutex
 	counter int
 	storage map[string]string
 }
 
-func (s *Store) Save(url string) string {
+func (s *MemStore) Save(url string) string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -19,16 +21,19 @@ func (s *Store) Save(url string) string {
 	return decodedCode
 }
 
-func (s *Store) Get(code string) (string, bool) {
+func (s *MemStore) Get(code string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	url, ok := s.storage[code]
-	return url, ok
+	if !ok {
+		return "", ErrNotFound
+	}
+	return url, nil
 }
 
-func NewStore() *Store {
-	return &Store{
+func NewMemStore() *MemStore {
+	return &MemStore{
 		counter: 0,
 		storage: make(map[string]string),
 	}
