@@ -1,11 +1,8 @@
 package main
 
 import (
-	"UrlShortner/data"
-	"UrlShortner/internal/errorhandling"
+	"UrlShortner/internal/handler"
 	"UrlShortner/internal/store"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 )
@@ -24,54 +21,16 @@ import (
 */
 
 var storage store.Store = store.NewMemStore()
+var redirectHandler = handler.NewHandlerConfig(storage)
 
 func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /{code}", func(w http.ResponseWriter, r *http.Request) {
-		code := r.PathValue("code")
-		url, err := storage.Get(code)
-		if err != nil {
-			if errors.Is(err, errorhandling.ErrNotFound) {
-				w.WriteHeader(http.StatusNotFound)
-				fmt.Println("URL Not Found")
-				return
-			}
-
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Println("Something wrong with the server")
-			return
-		}
-
-		http.Redirect(w, r, url, 302)
+		redirectHandler.RedirectGetURLBasedCode(w, r)
 	})
 	mux.HandleFunc("POST /shorten", func(writer http.ResponseWriter, request *http.Request) {
-		shortenerRequest := data.ShortenerRequest{}
-		err := json.NewDecoder(request.Body).Decode(&shortenerRequest)
-		if err != nil {
-			writer.WriteHeader(http.StatusBadRequest)
-			fmt.Printf("error decoding shortener request: %v\n", err)
-			return
-		}
-		if shortenerRequest.Url == "" {
-			writer.WriteHeader(http.StatusUnprocessableEntity)
-			fmt.Println("url cannot be empty")
-			return
-		}
-		fmt.Printf("shortener request: %v\n", shortenerRequest)
-
-		decodedCode := storage.Save(shortenerRequest.Url)
-		response := data.ShortenerResponse{
-			Url: decodedCode,
-		}
-
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusCreated)
-		err = json.NewEncoder(writer).Encode(response)
-		if err != nil {
-			fmt.Printf("error encoding shortener response: %v\n", err)
-			return
-		}
+		redirectHandler.RedirectShortenURLCompute(writer, request)
 	})
 
 	err := http.ListenAndServe(":8080", mux)
