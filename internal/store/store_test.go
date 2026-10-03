@@ -2,6 +2,7 @@ package store
 
 import (
 	"UrlShortner/internal/codec"
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -13,6 +14,7 @@ import (
 func TestStoreConcurrentAccess(t *testing.T) {
 	const n = 1000
 
+	ctx := context.Background()
 	store := NewMemStore()
 	codes := make([]string, n) // each goroutine writes only its own index, so the test itself is race-free
 
@@ -22,12 +24,17 @@ func TestStoreConcurrentAccess(t *testing.T) {
 
 		go func() {
 			defer wg.Done()
-			codes[i] = store.Save(fmt.Sprintf("https://example.com/%d", i))
+			code, err := store.Save(ctx, fmt.Sprintf("https://example.com/%d", i))
+			if err != nil {
+				t.Errorf("Save #%d error: %v", i, err)
+				return
+			}
+			codes[i] = code
 		}()
 
 		go func() {
 			defer wg.Done()
-			store.Get(codec.EncodeBase62(uint64(i + 1)))
+			store.Get(ctx, codec.EncodeBase62(uint64(i+1)))
 		}()
 	}
 	wg.Wait()
@@ -41,7 +48,7 @@ func TestStoreConcurrentAccess(t *testing.T) {
 		seen[code] = i
 
 		want := fmt.Sprintf("https://example.com/%d", i)
-		got, err := store.Get(code)
+		got, err := store.Get(ctx, code)
 		if err != nil {
 			t.Errorf("Get(%q) error: %v, want %q", code, err, want)
 		} else if got != want {

@@ -23,7 +23,7 @@ type RedirectHandler struct {
 
 func (h *RedirectHandler) RedirectGetURLBasedCode(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-	url, err := h.storage.Get(code)
+	url, err := h.storage.Get(r.Context(), code)
 	if err != nil {
 		if errors.Is(err, errorhandling.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
@@ -54,7 +54,12 @@ func (h *RedirectHandler) RedirectShortenURLCompute(w http.ResponseWriter, r *ht
 	}
 	fmt.Printf("shortener request: %v\n", shortenerRequest)
 
-	decodedCode := h.storage.Save(shortenerRequest.Url)
+	decodedCode, err := h.storage.Save(r.Context(), shortenerRequest.Url)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Printf("error on saving data: %v\n", err)
+		return
+	}
 	response := ShortenerResponse{
 		Url: decodedCode,
 	}

@@ -3,12 +3,13 @@ package store
 import (
 	"UrlShortner/internal/codec"
 	"UrlShortner/internal/errorhandling"
+	"context"
 	"sync"
 )
 
 type Store interface {
-	Save(url string) string
-	Get(code string) (string, error)
+	Save(ctx context.Context, url string) (string, error)
+	Get(ctx context.Context, code string) (string, error)
 }
 
 type MemStore struct {
@@ -17,7 +18,7 @@ type MemStore struct {
 	storage map[string]string
 }
 
-func (s *MemStore) Save(url string) string {
+func (s *MemStore) Save(ctx context.Context, url string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -25,10 +26,10 @@ func (s *MemStore) Save(url string) string {
 	decodedCode := codec.EncodeBase62(uint64(s.counter))
 	s.storage[decodedCode] = url
 
-	return decodedCode
+	return decodedCode, nil
 }
 
-func (s *MemStore) Get(code string) (string, error) {
+func (s *MemStore) Get(ctx context.Context, code string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
