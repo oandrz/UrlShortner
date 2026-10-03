@@ -2,6 +2,8 @@ package main
 
 import (
 	"UrlShortner/data"
+	"UrlShortner/internal/errorhandling"
+	"UrlShortner/internal/store"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,12 +22,8 @@ import (
 
 	Step 4 — full loop. POST, take the returned code, GET it, land on the real URL.
 */
-type Store interface {
-	Save(url string) string
-	Get(code string) (string, error)
-}
 
-var storage Store = data.NewMemStore()
+var storage store.Store = store.NewMemStore()
 
 func main() {
 	mux := http.NewServeMux()
@@ -34,7 +32,7 @@ func main() {
 		code := r.PathValue("code")
 		url, err := storage.Get(code)
 		if err != nil {
-			if errors.Is(err, data.ErrNotFound) {
+			if errors.Is(err, errorhandling.ErrNotFound) {
 				w.WriteHeader(http.StatusNotFound)
 				fmt.Println("URL Not Found")
 				return

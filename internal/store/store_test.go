@@ -1,6 +1,7 @@
-package data
+package store
 
 import (
+	"UrlShortner/internal/codec"
 	"fmt"
 	"sync"
 	"testing"
@@ -26,7 +27,7 @@ func TestStoreConcurrentAccess(t *testing.T) {
 
 		go func() {
 			defer wg.Done()
-			store.Get(EncodeBase62(uint64(i + 1)))
+			store.Get(codec.EncodeBase62(uint64(i + 1)))
 		}()
 	}
 	wg.Wait()

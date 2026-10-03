@@ -1,8 +1,15 @@
-package data
+package store
 
 import (
+	"UrlShortner/internal/codec"
+	"UrlShortner/internal/errorhandling"
 	"sync"
 )
+
+type Store interface {
+	Save(url string) string
+	Get(code string) (string, error)
+}
 
 type MemStore struct {
 	mu      sync.RWMutex
@@ -15,7 +22,7 @@ func (s *MemStore) Save(url string) string {
 	defer s.mu.Unlock()
 
 	s.counter++
-	decodedCode := EncodeBase62(uint64(s.counter))
+	decodedCode := codec.EncodeBase62(uint64(s.counter))
 	s.storage[decodedCode] = url
 
 	return decodedCode
@@ -27,7 +34,7 @@ func (s *MemStore) Get(code string) (string, error) {
 
 	url, ok := s.storage[code]
 	if !ok {
-		return "", ErrNotFound
+		return "", errorhandling.ErrNotFound
 	}
 	return url, nil
 }
