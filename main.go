@@ -3,8 +3,14 @@ package main
 import (
 	"UrlShortner/internal/handler"
 	"UrlShortner/internal/store"
+	"context"
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 /*
@@ -20,10 +26,28 @@ import (
 	Step 4 — full loop. POST, take the returned code, GET it, land on the real URL.
 */
 
-var storage store.Store = store.NewMemStore()
-var redirectHandler = handler.NewHandlerConfig(storage)
-
 func main() {
+
+	databaseUrl := os.Getenv("DATABASE_URL")
+	if databaseUrl == "" {
+		log.Fatal("DATABASE_URL is not set")
+	}
+
+	db, err := sql.Open("pgx", databaseUrl)
+	if err != nil {
+		log.Fatalf("open database: %v", err)
+	}
+	defer db.Close()
+
+	db.SetMaxOpenConns(10)
+
+	if err := db.PingContext(context.Background()); err != nil {
+		log.Fatalf("ping database: %v", err)
+	}
+
+	var storage store.Store = store.NewPostgresStore(db)
+	var redirectHandler = handler.NewHandlerConfig(storage)
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /{code}", func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +57,7 @@ func main() {
 		redirectHandler.RedirectShortenURLCompute(writer, request)
 	})
 
-	err := http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(":8080", mux)
 	if err != nil {
 		fmt.Println(err)
 		return
