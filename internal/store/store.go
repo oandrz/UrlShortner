@@ -7,11 +7,6 @@ import (
 	"sync"
 )
 
-type Store interface {
-	Save(ctx context.Context, url string) (string, error)
-	Get(ctx context.Context, code string) (string, error)
-}
-
 type MemStore struct {
 	mu      sync.RWMutex
 	counter int

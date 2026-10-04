@@ -27,7 +27,6 @@ import (
 */
 
 func main() {
-
 	databaseUrl := os.Getenv("DATABASE_URL")
 	if databaseUrl == "" {
 		log.Fatal("DATABASE_URL is not set")
@@ -45,8 +44,8 @@ func main() {
 		log.Fatalf("ping database: %v", err)
 	}
 
-	var storage store.Store = store.NewPostgresStore(db)
-	var redirectHandler = handler.NewHandlerConfig(storage)
+	storage := store.NewPostgresStore(db)
+	redirectHandler := handler.NewHandlerConfig(storage)
 
 	mux := http.NewServeMux()
 

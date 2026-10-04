@@ -2,12 +2,17 @@ package handler
 
 import (
 	"UrlShortner/internal/errorhandling"
-	"UrlShortner/internal/store"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 )
+
+type Store interface {
+	Save(ctx context.Context, url string) (string, error)
+	Get(ctx context.Context, code string) (string, error)
+}
 
 type ShortenerRequest struct {
 	Url string `json:"url"`
@@ -18,7 +23,7 @@ type ShortenerResponse struct {
 }
 
 type RedirectHandler struct {
-	storage store.Store
+	storage Store
 }
 
 func (h *RedirectHandler) RedirectGetURLBasedCode(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +78,7 @@ func (h *RedirectHandler) RedirectShortenURLCompute(w http.ResponseWriter, r *ht
 	}
 }
 
-func NewHandlerConfig(param store.Store) RedirectHandler {
+func NewHandlerConfig(param Store) RedirectHandler {
 	return RedirectHandler{
 		storage: param,
 	}

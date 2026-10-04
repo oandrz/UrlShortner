@@ -13,10 +13,6 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// Compile-time check: the build fails here if *PostgresStore stops satisfying
-// Store. Nothing runs; the blank identifier throws the value away.
-var _ Store = (*PostgresStore)(nil)
-
 // openTestDB connects to the Postgres named by DATABASE_URL. Tests that need a
 // real database skip themselves when it is not set, so `go test ./...` still
 // passes without Docker running.
@@ -71,8 +67,7 @@ func TestPostgresStoreGet(t *testing.T) {
 	}
 }
 
-// TestPostgresStoreSave uses the store through the Store interface, the way
-// the handlers will. It checks that the code is the base62 of the row's id,
+// TestPostgresStoreSave checks that the code is the base62 of the row's id,
 // that Get finds what Save stored, and that no row is left without a code.
 func TestPostgresStoreSave(t *testing.T) {
 	db := openTestDB(t)
@@ -83,7 +78,7 @@ func TestPostgresStoreSave(t *testing.T) {
 	cleanup()
 	t.Cleanup(cleanup)
 
-	var store Store = NewPostgresStore(db)
+	store := NewPostgresStore(db)
 
 	code, err := store.Save(ctx, first)
 	if err != nil {
