@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type Store interface {
@@ -52,11 +53,20 @@ func (h *RedirectHandler) RedirectShortenURLCompute(w http.ResponseWriter, r *ht
 		fmt.Printf("error decoding shortener request: %v\n", err)
 		return
 	}
-	if shortenerRequest.Url == "" {
+
+	parsedUrl, err := url.Parse(shortenerRequest.Url)
+	if shortenerRequest.Url == "" || err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Println("url cannot be empty")
 		return
 	}
+
+	if parsedUrl.Host == "" || (parsedUrl.Scheme != "http" && parsedUrl.Scheme != "https") {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Println("url should be http or https")
+		return
+	}
+
 	fmt.Printf("shortener request: %v\n", shortenerRequest)
 
 	decodedCode, err := h.storage.Save(r.Context(), shortenerRequest.Url)
