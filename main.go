@@ -47,14 +47,7 @@ func main() {
 	storage := store.NewPostgresStore(db)
 	redirectHandler := handler.NewHandlerConfig(storage)
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /{code}", func(w http.ResponseWriter, r *http.Request) {
-		redirectHandler.RedirectGetURLBasedCode(w, r)
-	})
-	mux.HandleFunc("POST /shorten", func(writer http.ResponseWriter, request *http.Request) {
-		redirectHandler.RedirectShortenURLCompute(writer, request)
-	})
+	mux := handler.NewRouter(&redirectHandler)
 
 	err = http.ListenAndServe(":8080", mux)
 	if err != nil {
